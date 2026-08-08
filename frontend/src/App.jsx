@@ -1,122 +1,57 @@
-// import React, { useState, useEffect } from 'react';
-// import io from 'socket.io-client';
-// import Welcome from './components/Welcome'; // This path will now resolve perfectly!
-
-// const App = () => {
-//   const [isLogin, setIsLogin] = useState(true);
-//   const [isOpen, setIsOpen] = useState(false);
-//   const [isLoggedIn, setIsLoggedIn] = useState(false);
-//   const [user, setUser] = useState(null);
-//   const [socket, setSocket] = useState(null);
-
-//   useEffect(() => {
-//     const token = localStorage.getItem('token');
-//     const savedUser = localStorage.getItem('user');
-//     if (token && savedUser) {
-//       try {
-//         setUser(JSON.parse(savedUser));
-//         setIsLoggedIn(true);
-//       } catch (e) {
-//         localStorage.clear();
-//       }
-//     }
-//   }, []);
-
-//   useEffect(() => {
-//     if (isLoggedIn && user) {
-//       const newSocket = io('http://localhost:5000');
-//       newSocket.emit('register-active-user', user.id || user._id);
-//       setSocket(newSocket);
-//       return () => newSocket.close();
-//     }
-//   }, [isLoggedIn, user]);
-
-//   const handleLogout = () => {
-//     localStorage.clear();
-//     setUser(null);
-//     setIsLoggedIn(false);
-//     if (socket) socket.disconnect();
-//   };
-
-//   return (
-//     <div className="bg-zinc-950 min-h-screen text-white">
-//       <Welcome
-//         isLogin={isLogin}
-//         setIsLogin={setIsLogin}
-//         isOpen={isOpen}
-//         setIsOpen={setIsOpen}
-//         isLoggedIn={isLoggedIn}
-//         setIsLoggedIn={setIsLoggedIn}
-//         user={user}
-//         setUser={setUser}
-//         socket={socket}
-//         onLogout={handleLogout}
-//       />
-//     </div>
-//   );
-// };
-
-// export default App;
-
-
 import React, { useState, useEffect } from 'react';
-import io from 'socket.io-client';
 import Welcome from './components/Welcome';
-LucideImport
-  import { LucideImport } from 'lucide-react';
+import { supabase } from './supabaseClient';
 
-const App = () => {
+export default function App() {
   const [isLogin, setIsLogin] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
-  const [socket, setSocket] = useState(null);
 
-  // Auto-login on page load/refresh
+  // Restore session on app refresh
   useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    const token = localStorage.getItem('token');
-    
-    if (savedUser && token) {
-      try {
-        setUser(JSON.parse(savedUser));
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        setUser(profile);
         setIsLoggedIn(true);
-      } catch (e) {
-       localStorage.removeItem('token');
-        localStorage.removeItem('user');
       }
-    }
+    };
+
+    checkSession();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        setUser(profile);
+        setIsLoggedIn(true);
+      } else {
+        setUser(null);
+        setIsLoggedIn(false);
+      }
+    });
+
+    return () => authListener.subscription.unsubscribe();
   }, []);
 
-
-
-  // Connect socket whenever user is logged in
-  useEffect(() => {
-    if (isLoggedIn && user) {
-      const newSocket = io('http://localhost:5000');
-      const userId = user.id || user._id;
-      
-      newSocket.emit('register-active-user', userId);
-      setSocket(newSocket);
-
-      return () => {
-        newSocket.disconnect();
-      };
-    } else if (socket) {
-      socket.disconnect();
-      setSocket(null);
-    }
-  }, [isLoggedIn, user]);
-
-  const handleLogout = () => {
-    localStorage.clear();
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
     setIsLoggedIn(false);
-    if (socket) socket.disconnect();
   };
 
   return (
-    <div className="bg-zinc-950 min-h-screen text-white">
+    <div className="h-screen w-full bg-zinc-950 text-white">
       <Welcome
         isLogin={isLogin}
         setIsLogin={setIsLogin}
@@ -126,11 +61,8 @@ const App = () => {
         setIsLoggedIn={setIsLoggedIn}
         user={user}
         setUser={setUser}
-        socket={socket}
-        onLogout={handleLogout}
+        handleLogout={handleLogout}
       />
     </div>
   );
-};
-
-export default App;
+}
