@@ -388,7 +388,7 @@ const handleConnectFriend = async (e, target) => {
                           <img
                             src={msg.file_url}
                             alt="uploaded content"
-                            className="w-full max-w-xs md:max-w-sm max-h-60 rounded-2xl object-cover cursor-pointer hover:opacity-95 transition  "
+                            className="w-full max-w-xs md\:max-w-sm max-h-60 rounded-2xl object-cover cursor-pointer hover:opacity-95 transition  "
                           />
                         ) : msg.is_sticker ? (
                           <span className="text-5xl select-none leading-none drop-shadow-md">{msg.text}</span>
