@@ -31,6 +31,8 @@ body {
 .static { position: static; }
 .sticky { position: sticky; }
 .inline-block { display: inline-block; }
+.inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+.absolute { position: absolute; }
 
 
 /* Viewport Layouts */
@@ -47,9 +49,12 @@ body {
 .max-h-60 { max-height: 15rem; }
 .object-cover { object-fit: cover; }
 .md\:max-w-sm { max-width: 24rem; }
+.h-5 { height: 1.25rem; }
 
 /* Styling Components */
 .bg-zinc-950 { background-color: #09090b; }
+.bg-white { background-color: #b1acac; }
+.bg-white-50 { background-color: #c0c1c4; }
 .bg-zinc-900 { background-color: #18181b; }
 .bg-zinc-800 { background-color: #27272a; }
 .bg-blue-600 { background-color: #2563eb; }
@@ -57,6 +62,7 @@ body {
 .bg-pink-400 { background-color:rgb(109, 105, 105); }
 .bg-brown-400 { background-color: rgb(121, 94, 94); }
 .bg-brown-500 { background-color: rgb(68, 67, 67); }
+.bg-gray-500 { background-color: rgb(107, 93, 93); }
 .bg-none { background-color: none; }
 .border { border: 1px solid #27272a; }
 .border-b { border-bottom: 1px solid #27272a; }
@@ -82,16 +88,19 @@ body {
 .mt-0 { margin-top: 0.1rem; }
 .mt-2 { margin-top: 0.5rem; }
 .mt-3 { margin-top: 2rem; }
+.mb-3 { margin-bottom: 0.5rem; }
 .ml-auto { margin-left: auto; }
 .mr-auto { margin-right: auto; }
 .gap-3 { gap: 0.75rem; }
 .py-1 { padding-right: 0.25rem; ; }
 .mt-16 { margin-top: 4rem; }  
 .mr-2 { margin-left: 23rem; }
+.mr-1 { margin-left: 18rem; }
 .bottom-0 { bottom: 0rem; }
 .ml-1 { margin-left: 2rem; }
 .p-6 { padding: 0.5rem; }
 .ml-18 { margin-left: 4.5rem; }
+.w-380px { width: 19.75rem; }
 
 
 
@@ -137,5 +146,5 @@ body {
 
 input[type="text"] {
   box-sizing: border-box;
-  color: #fff;
+  /* color: #fff; */
 }

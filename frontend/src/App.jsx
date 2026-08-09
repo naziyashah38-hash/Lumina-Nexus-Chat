@@ -52,6 +52,8 @@ export default function App() {
 
   return (
     <div className="h-screen w-full bg-zinc-950 text-white">
+     
+      
       <Welcome
         isLogin={isLogin}
         setIsLogin={setIsLogin}

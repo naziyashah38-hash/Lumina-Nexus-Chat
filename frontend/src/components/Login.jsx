@@ -7,9 +7,21 @@ import { supabase } from '../supabaseClient';
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
+  // Check for: 1 uppercase, 1 lowercase, 1 digit, 1 special character, min 6 characters
+const usernameRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\-#])[A-Za-z\d@$!%*?&_\-#]{6,}$/;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (!isLogin) {
+    if (!usernameRegex.test(username)) {
+      setError(
+        'Username must include at least 1 uppercase, 1 lowercase, 1 number, and 1 special character (@$!%*?&_-#).'
+      );
+      return; // Stop form submission
+    }
+  }
 
     try {
       if (isLogin) {
@@ -66,48 +78,67 @@ import { supabase } from '../supabaseClient';
   };
 
   return (
-    <div className="relative p-6 w-96 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <div className="w-380px p-8 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl shrink-0">
+
+      <div
+          onClick={closeForm}
+          type="button"
+          className=" mr-1 mb-3 p-1 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-full absolute cursor-pointer transition duration-200 ease-in-out"
+          aria-label="Close modal"
+        >
+           <span className=" h-5 font-bold">
+            ✕
+            </span> 
+        </div>
+
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <h2 className="text-2xl font-bold text-white text-center">
           {isLogin ? 'Welcome Back' : 'Create Account'}
         </h2>
 
         {error && (
-          <div className="text-red-400 text-xs bg-red-500/10 p-2 rounded border border-red-500/20 text-center">
+          <div className="text-red-400 text-xs bg-red-500/10 p-2 rounded border border-red-500/20 text-center whitespace-normal break-words leading-relaxed">
             {error}
           </div>
         )}
 
-        {!isLogin && (
-          <input
-            type="text"
-            placeholder="Username"
-            required
-            className="p-3 rounded-full bg-zinc-800 border border-zinc-700 text-white focus:outline-none"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-        )}
-
-        <input
+         <input
           type="email"
           placeholder="Email Address"
           required
-          className="p-3 rounded-full bg-zinc-800 border border-zinc-700 text-white focus:outline-none"
+          className="p-3 rounded-1xl bg-zinc-800 border border-zinc-700 text-white focus:outline-none"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
+
+
+        {!isLogin && (
+         <div className="flex flex-col gap-1">
+          <input
+            type="text"
+            placeholder="Username"
+            required 
+            className="p-3 rounded-1xl bg-white border border-zinc-700 text-black focus:outline-none"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+          
+           <p className="text-xxs text-zinc-400 px-3">
+      Must contain 1 uppercase, 1 lowercase, 1 number & 1 special character (@$!%*?&_-#)
+    </p> 
+    </div>
+        )}
 
         <input
           type="password"
           placeholder="Password"
           required
-          className="p-3 rounded-full bg-zinc-800 border border-zinc-700 text-white focus:outline-none"
+          className="p-3 rounded-1xl bg-white border border-zinc-700 text-black focus:outline-none"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        <button type="submit" className="bg-blue-600 font-medium p-3 rounded-full text-white">
+        <button type="submit" className="bg-gray-500 font-medium p-3 border  rounded-full text-black">
           {isLogin ? 'Log In' : 'Register'}
         </button>
 
@@ -124,3 +155,4 @@ import { supabase } from '../supabaseClient';
     </div>
   );
 }
+ 
