@@ -1,30 +1,52 @@
-import React, { useState, useEffect } from 'react';
-import Welcome from './components/Welcome';
-import { supabase } from './supabaseClient';
+import React, { useState, useEffect } from 'react'
+import Loader from './components/Loader'
+import Welcome from './components/Welcome'
+import Login from './components/Login'
+import { supabase } from './supabaseClient'
 
 export default function App() {
-  const [isLogin, setIsLogin] = useState(true);
-  const [isOpen, setIsOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true)
+  const [isLogIn, setIsLogIn] = useState(true)
+  const [isOpen, setIsOpen] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [user, setUser] = useState(null)
 
-  // Restore session on app refresh
+  useEffect(() => {
+    const loaderTimer = setTimeout(() => {
+      setLoading(false)
+    }, 4500) 
+
+    return () => clearTimeout(loaderTimer)
+  }, [])
+
+  const handleSearchInteraction = () => {
+  if (!isLoggedIn) {
+    setIsLogIn(false) 
+    setIsOpen(true) 
+  }
+}
+
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await supabase.auth.getSession()
+      
       if (session?.user) {
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
-          .single();
+          .single()
 
-        setUser(profile);
-        setIsLoggedIn(true);
+        setUser(profile)
+        setIsLoggedIn(true)
+        setIsOpen(false)
+      } else {
+        
+        setIsOpen(true)
       }
-    };
+    }
 
-    checkSession();
+    checkSession()
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
@@ -32,31 +54,40 @@ export default function App() {
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
-          .single();
-        setUser(profile);
-        setIsLoggedIn(true);
-      } else {
-        setUser(null);
-        setIsLoggedIn(false);
-      }
-    });
+          .single()
 
-    return () => authListener.subscription.unsubscribe();
-  }, []);
+        setUser(profile)
+        setIsLoggedIn(true)
+        setIsOpen(false)
+      } else {
+        setUser(null)
+        setIsLoggedIn(false)
+        setIsOpen(true)
+      }
+    })
+
+    return () => authListener?.subscription?.unsubscribe()
+  }, [])
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setIsLoggedIn(false);
-  };
+    await supabase.auth.signOut()
+    setUser(null)
+    setIsLoggedIn(false)
+    setIsOpen(true)
+  }
 
+ 
+  if (loading) {
+    return <Loader />
+  }
+
+  // MAIN APPLICATION SCREEN
   return (
-    <div className="h-screen w-full bg-zinc-950 text-white">
-     
-      
+    <div className='w-full h-screen bg-[#0a090b] text-white relative overflow-hidden'>
+      {/* 1. Main Welcome/Chat Interface */}
       <Welcome
-        isLogin={isLogin}
-        setIsLogin={setIsLogin}
+        isLogIn={isLogIn}
+        setIsLogIn={setIsLogIn}
         isOpen={isOpen}
         setIsOpen={setIsOpen}
         isLoggedIn={isLoggedIn}
@@ -64,7 +95,21 @@ export default function App() {
         user={user}
         setUser={setUser}
         handleLogout={handleLogout}
+        onSearchInteraction={handleSearchInteraction}
       />
+
+      {/* 2. Login Popup (Shown when user is not logged in) */}
+      {!isLoggedIn && isOpen && (
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm '>
+          <Login
+            isLogIn={isLogIn}
+            setIsLogIn={setIsLogIn}
+            closeForm={() => setIsOpen(false)}
+            setIsLoggedIn={setIsLoggedIn}
+            setUser={setUser}
+          />
+        </div>
+      )}
     </div>
-  );
+  )
 }

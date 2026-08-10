@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../supabaseClient';
 
- export default function Login({ isLogin, setIsLogin, closeForm, setIsLoggedIn, setUser }) {
+ export default function Login({ isLogIn, setIsLogIn, closeForm, setIsLoggedIn, setUser }) {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -14,7 +14,7 @@ const usernameRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\-#])[A-Za-z
     e.preventDefault();
     setError('');
 
-    if (!isLogin) {
+    if (!isLogIn) {
     if (!usernameRegex.test(username)) {
       setError(
         'Username must include at least 1 uppercase, 1 lowercase, 1 number, and 1 special character (@$!%*?&_-#).'
@@ -24,7 +24,7 @@ const usernameRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\-#])[A-Za-z
   }
 
     try {
-      if (isLogin) {
+      if (isLogIn) {
         // Log in user
         const { data, error: loginErr } = await supabase.auth.signInWithPassword({
           email,
@@ -78,7 +78,7 @@ const usernameRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\-#])[A-Za-z
   };
 
   return (
-    <div className="w-380px p-8 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl shrink-0">
+    <div className="w-380px p-8 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl transform-gpu shrink-0">
 
       <div
           onClick={closeForm}
@@ -93,7 +93,7 @@ const usernameRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\-#])[A-Za-z
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <h2 className="text-2xl font-bold text-white text-center">
-          {isLogin ? 'Welcome Back' : 'Create Account'}
+          {isLogIn ? 'Welcome Back' : 'Create Account'}
         </h2>
 
         {error && (
@@ -112,7 +112,7 @@ const usernameRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\-#])[A-Za-z
         />
 
 
-        {!isLogin && (
+        {!isLogIn && (
          <div className="flex flex-col gap-1">
           <input
             type="text"
@@ -139,17 +139,17 @@ const usernameRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\-#])[A-Za-z
         />
 
         <button type="submit" className="bg-gray-500 font-medium p-3 border  rounded-full text-black">
-          {isLogin ? 'Log In' : 'Register'}
+          {isLogIn ? 'Log In' : 'Register'}
         </button>
 
         <p
           className="text-xs text-gray-400 text-center cursor-pointer hover:underline"
           onClick={() => {
-            setIsLogin(!isLogin);
+            setIsLogIn(!isLogIn);
             setError('');
           }}
         >
-          {isLogin ? "Don't have an account? Sign Up" : 'Already have an account? Login'}
+          {isLogIn ? "Don't have an account? Sign Up" : 'Already have an account? Login'}
         </p>
       </form>
     </div>

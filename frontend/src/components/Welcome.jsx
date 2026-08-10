@@ -9,12 +9,13 @@ import { UserKey } from 'lucide-react';
 const SYSTEM_STICKERS = ['😀', '😂', '😍', '😎', '🔥', '👍', '❤️', '🎉'];
 
 export default function Welcome({
-  isLogin,
-  setIsLogin,
+  isLogIn,
+  setIsLogIn,
   isOpen,
   setIsOpen,
   isLoggedIn,
   setIsLoggedIn,
+  onSearchInteraction,
   user,
   setUser,
   handleLogout,
@@ -28,6 +29,18 @@ export default function Welcome({
   const [showStickers, setShowStickers] = useState(false);
   const messagesEndRef = useRef(null);
 
+  const handleSearchInput = (e) => {
+    // If not logged in, trigger the pop-up immediately and prevent typing
+    if (!isLoggedIn) {
+      if (onSearchInteraction) onSearchInteraction();
+      return;
+    }
+
+    // Normal search logic for logged in users
+    setSearchQuery(e.target.value);
+  }
+
+ 
 const fetchFriends = async () => {
   if (!user) return;
 
@@ -281,10 +294,10 @@ const handleConnectFriend = async (e, target) => {
           
           <div
             onClick={() => {
-              setIsLogin(true);
+             setIsLogIn(true);
               setIsOpen(true);
             }}
-            className="text-white p-3 rounded-lg font-bold font-medium transition"
+            className="text-white p-3 rounded-lg font-bold cursor-pointer font-medium transition"
           >
 <UserKey color="#808080" strokeWidth={2.75} alt="Sign In" /> 
           </div>
@@ -301,7 +314,12 @@ const handleConnectFriend = async (e, target) => {
             placeholder="Find someone to spill the tea with...☕"
          className="bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm focus:outline-none focus:border-blue-500 text-white shrink-0 " 
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => {
+          if (!isLoggedIn && onSearchInteraction) {
+            onSearchInteraction();
+          }
+        }} else 
+            onChange={(e) => setSearchQuery(e.target.value)} 
           />
 
           {/* Search Results */}
@@ -356,7 +374,7 @@ const handleConnectFriend = async (e, target) => {
               </div>
 
               {/* Messages Area */}
-              <div className="flex-1 rounded-full p-4 space-y-3 mt-3 flex flex-col">
+              <div className="flex-1  p-4 space-y-3 overflow-y-auto mt-4 custom-scrollbar flex flex-col">
                 {messages.map((msg, idx) => {
                   const isMe = msg.sender === user?.id;
                   return (
@@ -450,7 +468,7 @@ const handleConnectFriend = async (e, target) => {
                 <input
                   type="text"
                   placeholder={`Message ... ${activeChat.username}`}
-                  className="flex-1 bg-zinc-800 border border-zinc-700 rounded-full p-4  text-sm focus:outline-none"
+                  className="flex-1 bg-zinc-800 border border-zinc-700 rounded-full p-4 font-white font-bold text-sm focus:outline-none"
                   value={typedMessage}
                   onChange={(e) => setTypedMessage(e.target.value)}
                   onKeyDown={(e) =>
@@ -482,8 +500,8 @@ const handleConnectFriend = async (e, target) => {
       {isOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
           <Login
-            isLogin={isLogin}
-            setIsLogin={setIsLogin}
+            isLogIn={isLogIn}
+            setIsLogIn={setIsLogIn}
             closeForm={() => setIsOpen(false)}
             setIsLoggedIn={setIsLoggedIn}
             setUser={setUser}
