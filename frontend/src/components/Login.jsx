@@ -8,19 +8,29 @@ import { supabase } from '../supabaseClient';
   const [error, setError] = useState('');
 
   // Check for: 1 uppercase, 1 lowercase, 1 digit, 1 special character, min 6 characters
-const usernameRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\-#])[A-Za-z\d@$!%*?&_\-#]{6,}$/;
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\-#])[A-Za-z\d@$!%*?&_\-#]{6,}$/;
+const usernameRegex = /^[a-zA-Z0-9]{3,10}$/; // Alphanumeric, 3-10 characters and no spaces 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
     if (!isLogIn) {
-    if (!usernameRegex.test(username)) {
+    if (!passwordRegex.test(password)) {
       setError(
-        'Username must include at least 1 uppercase, 1 lowercase, 1 number, and 1 special character (@$!%*?&_-#).'
+        'Password must include at least 1 uppercase, 1 lowercase, 1 number, and 1 special character (@$!%*?&_-#).'
       );
       return; // Stop form submission
     }
+  }else if (!isLogIn && !usernameRegex.test(username)) {
+    setError(
+      'Username must be 3-10 characters long and can only contain letters and numbers.'
+    );
+    return; // Stop form submission
+  } 
+  if (/\s/.test(username)) {
+    setError('Username cannot contain spaces.');
+    return;
   }
 
     try {
@@ -120,15 +130,20 @@ const usernameRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\-#])[A-Za-z
             required 
             className="p-3 rounded-1xl bg-white border border-zinc-700 text-black focus:outline-none"
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={(e) => {
+              const noSpaces = e.target.value.replace(/\s+/g, '');
+              setUsername(noSpaces);
+            }}
           />
-          
-           <p className="text-xxs text-zinc-400 px-3">
-      Must contain 1 uppercase, 1 lowercase, 1 number & 1 special character (@$!%*?&_-#)
+          <p className="text-xxs text-zinc-400 px-3">
+      Must be 3-10 characters long and can only contain letters and numbers.
     </p> 
-    </div>
+       
+          
+          </div>
         )}
 
+<div className="flex flex-col gap-1">
         <input
           type="password"
           placeholder="Password"
@@ -136,7 +151,13 @@ const usernameRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\-#])[A-Za-z
           className="p-3 rounded-1xl bg-white border border-zinc-700 text-black focus:outline-none"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-        />
+           />
+           <p className="text-xxs text-zinc-400 px-3">
+      Must contain 1 uppercase, 1 lowercase, 1 number & 1 special character (@$!%*?&_-#)
+    </p> 
+       
+      </div>
+
 
         <button type="submit" className="bg-gray-500 font-medium p-3 border  rounded-full text-black">
           {isLogIn ? 'Log In' : 'Register'}
