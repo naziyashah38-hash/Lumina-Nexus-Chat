@@ -104,6 +104,7 @@ body {
 .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
 .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
 .px-4 { padding-left: 1rem; padding-right: 1rem; }
+.right-3 {right: 2rem;}
 .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
 .mb-1 { margin-bottom: 0.25rem; }
 .mb-4 { margin-bottom: 1rem; }
@@ -153,6 +154,8 @@ body {
 .text-brown-400 { color: rgb(121, 94, 94); }
 .text-brown-600 { color: rgb(32, 32, 32); }
 .text-brown-700 { color: rgba(148, 143, 145, 0.685); }
+.text {color : rgb(121, 94, 94)}
+.text-h{color:rgb(66, 40, 49)}
 .text-white { color: #ffffff; }
 .text-black { color: black; }
 .font-purple { color: rgb(185, 160, 168); }
@@ -184,6 +187,8 @@ body {
 .overflow-hidden { overflow: hidden; }
 .relative { position: relative; }
 .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+.transition {transition: ease-in-out;}
+
 
 
 input[type="text"] {

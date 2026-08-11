@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { supabase } from '../supabaseClient';
+import { Eye, EyeOff } from 'lucide-react'
 
  export default function Login({ isLogIn, setIsLogIn, closeForm, setIsLoggedIn, setUser }) {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false)
 
   // Check for: 1 uppercase, 1 lowercase, 1 digit, 1 special character, min 6 characters
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\-#])[A-Za-z\d@$!%*?&_\-#]{6,}$/;
@@ -145,13 +147,26 @@ const usernameRegex = /^[a-zA-Z0-9]{3,10}$/; // Alphanumeric, 3-10 characters an
 
 <div className="flex flex-col gap-1">
         <input
-          type="password"
+          type={showPassword ? "text" : "password"}
           placeholder="Password"
           required
           className="p-3 rounded-1xl bg-white border border-zinc-700 text-black focus:outline-none"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
            />
+
+            <div
+      type="button" // CRITICAL: Must be type="button" so it doesn't trigger form submit
+      onClick={() => setShowPassword(!showPassword)}
+      className=" absolute right-3 p-3 border-none text hover:text-h cursor-pointer transition-colors "
+    >
+      {showPassword ? (
+        <EyeOff size={18} />
+      ) : (
+        <Eye size={18} />
+      )}
+    </div>
+
            <p className="text-xxs text-zinc-400 px-3">
       Must contain 1 uppercase, 1 lowercase, 1 number & 1 special character (@$!%*?&_-#)
     </p> 

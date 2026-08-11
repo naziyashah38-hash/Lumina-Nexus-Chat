@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient';
 import Login from './Login';
 import { LogIn, LogOut, Send, Paperclip, UserPlus , SmilePlus , Upload ,Trash2} from 'lucide-react';
 import { UserKey } from 'lucide-react';
+import { Dot } from 'lucide-react';
 
 
 
@@ -284,8 +285,9 @@ const handleConnectFriend = async (e, target) => {
         <h1 className=" cormorant-garamond-uniquifier font-bold text-brown-400 ml-1 tracking-wider ">LUMINA NEXUS </h1>
          <p className=" text-bold ">Lumina said  'HI' 😉</p>
         {isLoggedIn ? (
-          <div className="flex items-center gap-4">
-            <span className="text-sm bg-zinc-800 px-3 py-1 rounded-full border border-zinc-700">
+          <div className="flex items-center gap-2"> 
+          <Dot size={36} strokeWidth={3} />
+            <span className="text-sm bg-zinc-800 p-2 rounded-full border ">
               {user?.username || user?.email}
             </span>
              <div onClick={handleLogout} className="text-xs p-2 text-red-400 hover:underline"><LogIn color="#808080" strokeWidth={2.75} alt='Log Out' /> </div>
