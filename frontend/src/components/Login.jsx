@@ -7,14 +7,16 @@ import { Eye, EyeOff } from 'lucide-react'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [showPassword, setShowPassword] = useState(false)
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Check for: 1 uppercase, 1 lowercase, 1 digit, 1 special character, min 6 characters
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\-#])[A-Za-z\d@$!%*?&_\-#]{6,}$/;
-const usernameRegex = /^[a-zA-Z0-9]{3,10}$/; // Alphanumeric, 3-10 characters and no spaces 
+const usernameRegex = /^[a-zA-Z0-9]{3,10}$/; 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     setError('');
 
     if (!isLogIn) {
@@ -36,6 +38,7 @@ const usernameRegex = /^[a-zA-Z0-9]{3,10}$/; // Alphanumeric, 3-10 characters an
   }
 
     try {
+    
       if (isLogIn) {
         // Log in user
         const { data, error: loginErr } = await supabase.auth.signInWithPassword({
@@ -86,7 +89,9 @@ const usernameRegex = /^[a-zA-Z0-9]{3,10}$/; // Alphanumeric, 3-10 characters an
       }
     } catch (err) {
       setError(err.message || 'Authentication failed');
-    }
+    }finally {
+    setIsLoading(false);
+  }
   };
 
   return (
@@ -174,7 +179,7 @@ const usernameRegex = /^[a-zA-Z0-9]{3,10}$/; // Alphanumeric, 3-10 characters an
       </div>
 
 
-        <button type="submit" className="bg-gray-500 font-medium p-3 border  rounded-full text-black">
+        <button type="submit" disabled={ isLoading} className="bg-gray-500 font-medium p-3 border  cursor-pointer  rounded-full text-black">
           {isLogIn ? 'Log In' : 'Register'}
         </button>
 

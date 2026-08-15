@@ -10,6 +10,11 @@ export default function App() {
   const [isOpen, setIsOpen] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [user, setUser] = useState(null)
+  const [isLoading, setIsLoading] = useState(false);
+ 
+  useEffect(() => {
+    document.title = "Lumina Nexus";
+  }, []);
 
   useEffect(() => {
     const loaderTimer = setTimeout(() => {
@@ -37,7 +42,7 @@ export default function App() {
           .eq('id', session.user.id)
           .single()
 
-        setUser(profile)
+        setUser(profile)  
         setIsLoggedIn(true)
         setIsOpen(false)
       } else {

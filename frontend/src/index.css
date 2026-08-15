@@ -76,8 +76,10 @@ body {
 .bg-pink-400 { background-color:rgb(109, 105, 105); }
 .bg-brown-400 { background-color: rgb(121, 94, 94); }
 .bg-brown-700 { background-color: rgb(59, 45, 45); }
+.bg-brown-750 { background-color: rgba(59, 45, 45, 0.434); }
 .bg-brown-500 { background-color: rgb(68, 67, 67); }
 .bg-gray-500 { background-color: rgb(107, 93, 93); }
+.bg-gray-550 {background-color: rgb(135, 120, 120);}
 .bg-purple { background-color: rgb(66, 40, 49) }
 .bg-none { background-color: none; }
 .border { border: 1px solid #27272a; }

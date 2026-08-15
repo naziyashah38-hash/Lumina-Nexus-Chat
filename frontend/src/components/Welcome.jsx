@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabaseClient';
 import Login from './Login';
-import { LogIn, LogOut, Send, Paperclip, UserPlus , SmilePlus , Upload ,Trash2} from 'lucide-react';
+import { LogIn, LogOut, Send, Paperclip, UserPlus , SmilePlus , Upload ,Trash2 , Smile} from 'lucide-react';
 import { UserKey } from 'lucide-react';
 import { Dot } from 'lucide-react';
 
@@ -20,6 +20,7 @@ export default function Welcome({
   user,
   setUser,
   handleLogout,
+  message_reactions,
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -29,6 +30,10 @@ export default function Welcome({
   const [typedMessage, setTypedMessage] = useState('');
   const [showStickers, setShowStickers] = useState(false);
   const messagesEndRef = useRef(null);
+  const [isTyping, setIsTyping] = useState(false);
+  const [peerIsTyping, setPeerIsTyping] = useState(false);
+  const [activeEmojiMenu, setActiveEmojiMenu] = useState(null);
+  const typingTimeoutRef = useRef(null);
 
   const handleSearchInput = (e) => {
     // If not logged in, trigger the pop-up immediately and prevent typing
@@ -107,7 +112,7 @@ useEffect(() => {
 
     const { data, error } = await supabase
       .from('messages')
-      .select('*')
+      .select('*, message_reactions(*)')
       .or(
         `and(sender.eq.${user.id},recipient.eq.${activeChat.id}),and(sender.eq.${activeChat.id},recipient.eq.${user.id})`
       )
@@ -137,8 +142,20 @@ useEffect(() => {
             (newMsg.sender === user.id && newMsg.recipient === activeChat.id) ||
             (newMsg.sender === activeChat.id && newMsg.recipient === user.id)
           ) {
-            setMessages((prev) => [...prev, newMsg]);
+            setMessages((prev) => [...prev, newMsg , message_reactions ]);
           }
+        }
+      ).on('broadcast', { event: 'typing' }, (payload) => {
+        if (payload.payload.senderId === activeChat.id) {
+          setPeerIsTyping(payload.payload.isTyping);
+        }
+      })
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'message_reactions' },
+        () => {
+          // Refresh messages when reactions update
+          fetchChatHistory();
         }
       )
       .subscribe();
@@ -151,7 +168,34 @@ useEffect(() => {
   // Scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages , peerIsTyping]);
+
+  // Handle Input typing status broadcast
+  const handleTypedMessageChange = (e) => {
+    setTypedMessage(e.target.value);
+
+    if (!activeChat) return;
+
+    if (!isTyping) {
+      setIsTyping(true);
+      supabase.channel(`chat_room:${activeChat.id}`).send({
+        type: 'broadcast',
+        event: 'typing',
+        payload: { senderId: user.id, isTyping: true },
+      });
+    }
+
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsTyping(false);
+      supabase.channel(`chat_room:${activeChat.id}`).send({
+        type: 'broadcast',
+        event: 'typing',
+        payload: { senderId: user.id, isTyping: false },
+      });
+    }, 1500);
+  };
 
   // Send Direct Message
   const handleSendMessage = async (textPayload = '', fileUrl = '', isSticker = false) => {
@@ -170,8 +214,42 @@ useEffect(() => {
     if (!error) {
       setTypedMessage('');
       setShowStickers(false);
+      setIsTyping(false);
     }
   };
+  // Toggle Reaction on Message
+ const handleToggleReaction = async (messageId, emoji) => {
+  try {
+    // 1. Check if user already reacted with this emoji on this message
+    const { data: existingReaction, error: fetchError } = await supabase
+      .from('message_reactions')
+      .select('id')
+      .eq('message_id', messageId)
+      .eq('user_id', user.id)
+      .eq('emoji', emoji)
+      .maybeSingle();
+
+    if (fetchError) throw fetchError;
+
+    if (existingReaction) {
+      // 2. If it exists, remove it (Toggle OFF)
+      await supabase
+        .from('message_reactions')
+        .delete()
+        .eq('id', existingReaction.id);
+    } else {
+      // 3. If it doesn't exist, insert it (Toggle ON)
+      await supabase
+        .from('message_reactions')
+        .insert([{ message_id: messageId, user_id: user.id, emoji }]);
+    }
+
+    // Hide emoji picker menu after clicking
+    setActiveEmojiMenu(null);
+  } catch (error) {
+    console.error('Error toggling reaction:', error.message);
+  }
+};
 
  // Upload Attachment
 const handleFileUpload = async (e) => {
@@ -246,7 +324,11 @@ const handleConnectFriend = async (e, target) => {
     setSearchResults([]);
     return;
   }
-
+if (!user || !user.id) {
+  alert("You must be logged in to add a friend!");
+  setIsOpen(true); // Open login modal
+  return;
+}
   // 2. Insert connection into Supabase
   const { error } = await supabase.from('friends').insert([
     { user_id: user.id, friend_id: targetId }
@@ -299,7 +381,7 @@ const handleConnectFriend = async (e, target) => {
              setIsLogIn(true);
               setIsOpen(true);
             }}
-            className="text-white p-3 rounded-lg font-bold cursor-pointer font-medium transition"
+            className="text-white p-3 rounded-lg font-bold cursor-pointer font-medium "
           >
 <UserKey color="#808080" strokeWidth={2.75} alt="Sign In" /> 
           </div>
@@ -374,11 +456,21 @@ const handleConnectFriend = async (e, target) => {
               <div className="p-4 fixed text-brown-400 border-b border-zinc-800 mt-0 w-full font-bold bg-zinc-950 ">
                 {activeChat.username}
               </div>
+              <p className="text-xs text-blue-400 h-4">
+                    {peerIsTyping ? 'typing...' : 'Online'}
+                  </p>
 
               {/* Messages Area */}
               <div className="flex-1  p-4 space-y-3 overflow-y-auto mt-4 custom-scrollbar flex flex-col">
-                {messages.map((msg, idx) => {
+                {messages.filter(Boolean).map((msg, idx) => {
                   const isMe = msg.sender === user?.id;
+
+                    // Group reactions by emoji count
+                  const reactionCounts = (msg.message_reactions || []).reduce((acc, curr) => {
+                    acc[curr.emoji] = (acc[curr.emoji] || 0) + 1;
+                    return acc;
+                  }, {});
+
                   return (
                     
                     <div
@@ -393,6 +485,34 @@ const handleConnectFriend = async (e, target) => {
             >
               {formatTime(msg.created_at)}
             </span>
+
+                  <div>
+                    {/* Reaction Picker Button */}
+                        {!isMe && (
+                          <div
+                            onClick={() =>
+                              setActiveEmojiMenu(activeEmojiMenu === msg.id ? null : msg.id)
+                            }
+                            className="opacity-0 group-hover:opacity-100 transition  hover:text-white"
+                          >
+                            <Smile size={16} />
+                          </div>
+                        )}
+                        
+                        {activeEmojiMenu === msg.id && 
+                        <div className="absolute  mb-2 bg-brown-750 rounded-xl p-1 cursor-pointer flex gap-3 z-20 ">
+                        {['❤️', '😂', '🔥', '👍', '😮'].map((emoji) => (
+                              <div
+                                key={emoji}
+                                onClick={() => handleToggleReaction(msg.id, emoji)}
+                                className="hover:scale-125 transition text-base"
+                              >
+                                {emoji}
+                              </div>
+                        ))}
+            </div> 
+            }</div>
+
                       <div
                        className={`inline-block text-sm ${
                             msg.file_url || msg.is_sticker
@@ -400,15 +520,12 @@ const handleConnectFriend = async (e, target) => {
                               : isMe
                               ? 'bg-brown-400 text-white px-4 py-2 rounded-br-none rounded-2xl'
                               : 'bg-zinc-800 text-zinc-100 px-4 py-2 rounded-bl-none rounded-2xl'
-                          }`}
-                                                >
-
-                          
-                        {msg.file_url ? (
+                          }`} >
+                             {msg.file_url ? (
                           <img
                             src={msg.file_url}
                             alt="uploaded content"
-                            className="w-full max-w-xs md\:max-w-sm max-h-60 rounded-2xl object-cover cursor-pointer hover:opacity-95 transition  "
+                            className="w-full max-w-xs md\:max-w-sm max-h-60 rounded-2xl object-cover cursor-pointer hover:opacity-95   "
                           />
                         ) : msg.is_sticker ? (
                           <span className="text-5xl select-none leading-none drop-shadow-md">{msg.text}</span>
@@ -416,21 +533,34 @@ const handleConnectFriend = async (e, target) => {
                           <p className="whitespace-pre-wrap break-words">{msg.text}</p>
                         )}
                       </div> 
+                      {/* Delete */}
+                       {isMe && (
+                              <div
+                                onClick={() => handleDeleteMessage(msg.id)}
+                                title="Delete message"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 cursor-pointer text-zinc-400 hover:text-red-400 rounded shrink-0"
+                              >
+                                <Trash2 size={15} />
+                              </div>
+                            )}
 
-
-
-    {isMe && (
-                <div
-                  onClick={() => handleDeleteMessage(msg.id)}
-                  title="Delete message"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-zinc-400 hover:text-red-400 rounded shrink-0"
-                >
-                  <Trash2 size={15} />
-                </div>
-              )}
-
+                            {/* Display Selected Reactions Below Message */}
+                      {Object.keys(reactionCounts).length > 0 && (
+                        <div className="flex gap-1 mt-1 px-1">
+                          {Object.entries(reactionCounts).map(([emoji, count]) => (
+                            <span
+                              key={emoji}
+                              className="bg-zinc-800 border border-zinc-700 rounded-full text-xs px-2 py-0.5 flex items-center gap-1"
+                            >
+                              <span>{emoji}</span>
+                              <span className="text-zinc-400 text-[10px]">{count}</span>
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                   
+                    
+
                   );
                 })}
                 <div ref={messagesEndRef} />
@@ -445,7 +575,7 @@ const handleConnectFriend = async (e, target) => {
                     <div
                       key={idx}
                       onClick={() => handleSendMessage(sticker, '', true)}
-                      className=" text-2xl hover:scale-125 bg-none transition cursor-pointer select-none"
+                      className=" text-2xl hover:scale-125 bg-none  cursor-pointer select-none"
                     >
                       {sticker}
                     </div>
@@ -484,7 +614,7 @@ const handleConnectFriend = async (e, target) => {
                   onClick={() =>
                     typedMessage.trim() && handleSendMessage(typedMessage, '', false)
                   }
-                  className="bg-brown-400 hover:bg-blue-700 border p-3 rounded-full text-sm font-bold transition"
+                  className="bg-brown-400 hover:bg-blue-700 border p-3 rounded-full text-sm font-bold "
                 >
                  <Send color="#ffffff" strokeWidth={0.75} />
                 </div>
