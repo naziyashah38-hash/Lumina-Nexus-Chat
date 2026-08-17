@@ -299,7 +299,7 @@ const handleDeleteMessage = async (messageId) => {
     return;
   }
 
-  setMessages((prev) => prev.filter((msg) => msg.id !== messageId));
+  setMessages((prev) => prev.filter((msg) => msg?.id !== messageId));
 };
 
 // time
