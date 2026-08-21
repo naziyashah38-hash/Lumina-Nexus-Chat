@@ -128,6 +128,7 @@ body {
 .mr-1 { margin-left: 18rem; }
 .bottom-0 { bottom: 0rem; }
 .ml-1 { margin-left: 2rem; }
+.ml-2 {margin-left: 1rem;}
 .p-6 { padding: 0.5rem; }
 .ml-18 { margin-left: 4.5rem; }
 .w-380px { width: 19.75rem; }
@@ -171,6 +172,9 @@ body {
 .drop-shadow-md { text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); }
 .text-purple-300 { color: rgb(148, 143, 145); }
 .text-m{color : #c88e80/80}
+.text-green-400 {color: #55ad75}
+.offline {color : #9CA3AF}
+.typing {color : #4B5563}
 
 
 .overflow-y-auto { overflow-y: auto; }
@@ -183,13 +187,17 @@ body {
 .break-words { word-wrap: break-word; }
 .animate-spin { animation: spin 1s linear infinite; }
 .relative { position: relative; }
+.inline-block  {display :inline-block ;}
 .transition-all { transition-property: all; }
 .duration-700 { transition-duration: 700ms; }
 .transform { transform: translateZ(0); }
 .overflow-hidden { overflow: hidden; }
-.relative { position: relative; }
 .custom-scrollbar::-webkit-scrollbar { width: 8px; }
 .transition {transition: ease-in-out;}
+.animate-pulse {animation : pulse 2s}
+.bottom-full {bottom:-100%; ;}
+.left-0{left: 0;}
+.right-0 {right: 0;}
 
 
 

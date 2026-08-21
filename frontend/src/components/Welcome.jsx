@@ -5,8 +5,6 @@ import { LogIn, LogOut, Send, Paperclip, UserPlus , SmilePlus , Upload ,Trash2 ,
 import { UserKey } from 'lucide-react';
 import { Dot } from 'lucide-react';
 
-
-
 const SYSTEM_STICKERS = ['😀', '😂', '😍', '😎', '🔥', '👍', '❤️', '🎉'];
 
 export default function Welcome({
@@ -31,9 +29,57 @@ export default function Welcome({
   const [showStickers, setShowStickers] = useState(false);
   const messagesEndRef = useRef(null);
   const [isTyping, setIsTyping] = useState(false);
-  const [peerIsTyping, setPeerIsTyping] = useState(false);
   const [activeEmojiMenu, setActiveEmojiMenu] = useState(null);
+  const [onlineUsers, setOnlineUsers] = useState({});
+  const [isFriendTyping, setIsFriendTyping] = useState(false);
+  const channelRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+
+const targetChatId = activeChat?.id || activeChat?.friend_id || activeChat?.user_id;
+
+            const formatExactLastSeen = (timestamp) => {
+          if (!timestamp) return 'Offline';
+
+          const date = new Date(timestamp);
+          
+          // Format as "Aug 21 at 6:46 PM" (or "Today at 6:46 PM")
+          const isToday = new Date().toDateString() === date.toDateString();
+          const timeStr = date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+
+          if (isToday) {
+            return `Today at ${timeStr}`;
+          }
+
+          const dateStr = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+          return `${dateStr} at ${timeStr}`;
+        };
+
+useEffect(() => {
+  if (!user?.id) return;
+
+  const updateMyLastSeen = async () => {
+    await supabase
+      .from('profiles')
+      .update({ last_seen: new Date().toISOString() })
+      .eq('id', user.id);
+  };
+
+  // 1. Update timestamp immediately when opening the app
+  updateMyLastSeen();
+
+  // 2. Update timestamp when closing the browser tab
+  const handleBeforeUnload = () => {
+    updateMyLastSeen();
+  };
+
+  window.addEventListener('beforeunload', handleBeforeUnload);
+
+  return () => {
+    // 3. Update timestamp when leaving/unmounting
+    updateMyLastSeen();
+    window.removeEventListener('beforeunload', handleBeforeUnload);
+  };
+}, [user?.id]);
 
   const handleSearchInput = (e) => {
     // If not logged in, trigger the pop-up immediately and prevent typing
@@ -90,13 +136,6 @@ useEffect(() => {
       .select('*')
       .ilike('username', `%${searchQuery.trim()}%`);
 
-    if (error) {
-      console.error("Search database error:", error.message);
-      return;
-    }
-
-    console.log("Search raw results:", data);
-
     // Filter out current logged in user
     const filtered = (data || []).filter((u) => u.id !== user?.id);
     setSearchResults(filtered);
@@ -129,10 +168,21 @@ useEffect(() => {
 
   // Supabase Realtime Listener
   useEffect(() => {
-    if (!activeChat || !user) return;
+setIsFriendTyping(false);
+    // Extract the target chat user ID safely
+  const targetChatId = activeChat?.id || activeChat?.friend_id || activeChat?.user_id;
 
-    const channel = supabase
-      .channel('realtime_messages')
+   if (!targetChatId || !user?.id) 
+    return; 
+    // Symmetric room ID so both users join the exact same channel
+  const roomId = [user.id, targetChatId].sort().join('_');
+
+  const channel = supabase.channel(`chat_room:${roomId}`, {
+    config: { presence: { key: user.id } },
+  });
+        channelRef.current = channel;
+
+     channel
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'messages' },
@@ -145,57 +195,79 @@ useEffect(() => {
             setMessages((prev) => [...prev, newMsg , message_reactions ]);
           }
         }
-      ).on('broadcast', { event: 'typing' }, (payload) => {
-        if (payload.payload.senderId === activeChat.id) {
-          setPeerIsTyping(payload.payload.isTyping);
-        }
-      })
+      )
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'message_reactions' },
-        () => {
+        (payload) => {
           // Refresh messages when reactions update
           fetchChatHistory();
         }
       )
-      .subscribe();
+          // ✅ Make sure your Realtime setup is closed properly
+      .on('broadcast', { event: 'typing' }, (payload) => {
+        const data = payload?.payload || payload;
+        const senderId = data?.userId;
+        const typingStatus = data?.isTyping;
+
+        if (senderId && String(senderId) !== String(user?.id)) {
+          setIsFriendTyping(Boolean(typingStatus));
+        }
+})
+    .on('presence', { event: 'sync' }, () => {
+      setOnlineUsers(channel.presenceState());
+    })
+      .subscribe((status, err) => {
+      if (status === 'SUBSCRIBED') {
+        channel.track({
+          user_id: user.id,
+          online_at: new Date().toISOString(),
+        });
+      }
+    });
 
     return () => {
       supabase.removeChannel(channel);
+      channelRef.current = null;
     };
-  }, [activeChat, user]);
+  }, [targetChatId , user?.id]);
 
   // Scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages , peerIsTyping]);
+  }, [messages]);
 
   // Handle Input typing status broadcast
   const handleTypedMessageChange = (e) => {
     setTypedMessage(e.target.value);
 
-    if (!activeChat) return;
+   // Check if channel exists AND is subscribed
+  if (!channelRef.current|| !targetChatId) 
+  return;
 
-    if (!isTyping) {
-      setIsTyping(true);
-      supabase.channel(`chat_room:${activeChat.id}`).send({
-        type: 'broadcast',
-        event: 'typing',
-        payload: { senderId: user.id, isTyping: true },
-      });
-    }
+
+    const roomId = [user.id, activeChat.id].sort().join('_');
+   channelRef.current.send({
+    type: 'broadcast',
+    event: 'typing',
+    payload: {
+      userId: user.id,
+      isTyping: e.target.value.trim().length > 0,
+     },
+  });
 
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
 
     typingTimeoutRef.current = setTimeout(() => {
-      setIsTyping(false);
-      supabase.channel(`chat_room:${activeChat.id}`).send({
+     if (channelRef.current && channelRef.current.state === 'joined') {
+      channelRef.current.send({
         type: 'broadcast',
         event: 'typing',
-        payload: { senderId: user.id, isTyping: false },
+        payload: { userId: user.id, isTyping: false },
       });
-    }, 1500);
-  };
+    }
+  }, 1500);
+}; 
 
   // Send Direct Message
   const handleSendMessage = async (textPayload = '', fileUrl = '', isSticker = false) => {
@@ -360,7 +432,10 @@ if (!user || !user.id) {
   setSearchResults([]);
 };
 
+    // const targetChatId = activeChat?.id || activeChat?.friend_id || activeChat?.user_id;
+
   return (
+    
     <div className="min-h-screen flex flex-col bg-zinc-950 text-zinc-100">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 h-16 w-full px-6 border-b border-zinc-800 flex justify-between items-center bg-zinc-950">
@@ -450,15 +525,27 @@ if (!user || !user.id) {
 
         {/* Chat Area */}
         <main className="flex-1 mr-2 flex flex-col bg-zinc-950 h-screen pt-16 ml-80">
-          {activeChat ? (
-            <>
+         {activeChat ? (
+            <> 
               {/* Chat Header */}
               <div className="p-4 fixed text-brown-400 border-b border-zinc-800 mt-0 w-full font-bold bg-zinc-950 ">
-                {activeChat.username}
-              </div>
-              <p className="text-xs text-blue-400 h-4">
-                    {peerIsTyping ? 'typing...' : 'Online'}
-                  </p>
+                {activeChat.username|| activeChat?.name}
+             
+               <span className="text-xs ml-1 font-normal">
+                        {isFriendTyping ? (
+                          <span className="typing font-medium animate-pulse">typing...</span>
+                        ) : onlineUsers[targetChatId]?.length > 0 ? (
+                          <span className="text-green-400  items-center gap-1">
+                            <span className="text-[10px]">●</span> Online
+                          </span>
+                        ) : activeChat?.last_seen ? (
+                          <span className="text-zinc-500" >
+                            Last seen : {formatExactLastSeen(activeChat.last_seen || activeChat.Last_seen)}
+                          </span>
+                        ) : (
+                          <span className="offline">Offline</span>
+                        )}
+                      </span> </div>
 
               {/* Messages Area */}
               <div className="flex-1  p-4 space-y-3 overflow-y-auto mt-4 custom-scrollbar flex flex-col">
@@ -486,26 +573,26 @@ if (!user || !user.id) {
               {formatTime(msg.created_at)}
             </span>
 
-                  <div>
+                  <div classname= "relative inline-block">
                     {/* Reaction Picker Button */}
                         {!isMe && (
                           <div
                             onClick={() =>
                               setActiveEmojiMenu(activeEmojiMenu === msg.id ? null : msg.id)
                             }
-                            className="opacity-0 group-hover:opacity-100 transition  hover:text-white"
+                            className="opacity-0 group-hover:opacity-100 transition cursor-pointer hover:text-white"
                           >
                             <Smile size={16} />
                           </div>
                         )}
                         
                         {activeEmojiMenu === msg.id && 
-                        <div className="absolute  mb-2 bg-brown-750 rounded-xl p-1 cursor-pointer flex gap-3 z-20 ">
+                        <div className="  bg-brown-750 rounded-xl p-1 cursor-pointer flex gap-3  ">
                         {['❤️', '😂', '🔥', '👍', '😮'].map((emoji) => (
                               <div
                                 key={emoji}
                                 onClick={() => handleToggleReaction(msg.id, emoji)}
-                                className="hover:scale-125 transition text-base"
+                                className="cursor-pointer text-base"
                               >
                                 {emoji}
                               </div>
@@ -599,15 +686,15 @@ if (!user || !user.id) {
 
                 <input
                   type="text"
-                  placeholder={`Message ... ${activeChat.username}`}
+                  placeholder={`Message ... ${activeChat.username|| activeChat?.name}`}
                   className="flex-1 bg-zinc-800 border border-zinc-700 rounded-full p-4 font-white font-bold text-sm focus:outline-none"
                   value={typedMessage}
-                  onChange={(e) => setTypedMessage(e.target.value)}
-                  onKeyDown={(e) =>
-                    e.key === 'Enter' &&
-                    typedMessage.trim() &&
-                    handleSendMessage(typedMessage, '', false)
-                  }
+                  onChange={handleTypedMessageChange}
+                  onKeyDown={(e) =>{
+                   if (e.key === 'Enter' && typedMessage.trim()) {
+                            handleSendMessage(typedMessage, '', false);
+                          }
+                    }}
                 />
 
                 <div
