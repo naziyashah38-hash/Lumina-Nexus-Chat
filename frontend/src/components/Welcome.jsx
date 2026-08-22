@@ -34,8 +34,9 @@ export default function Welcome({
   const [isFriendTyping, setIsFriendTyping] = useState(false);
   const channelRef = useRef(null);
   const typingTimeoutRef = useRef(null);
-
-const targetChatId = activeChat?.id || activeChat?.friend_id || activeChat?.user_id;
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const targetChatId = activeChat?.id || activeChat?.friend_id || activeChat?.user_id;
+ 
 
             const formatExactLastSeen = (timestamp) => {
           if (!timestamp) return 'Offline';
@@ -100,6 +101,7 @@ const fetchFriends = async () => {
   const { data: rows, error } = await supabase
     .from('friends')
     .select('user_id, friend_id')
+    .eq('status', 'accepted')
     .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
 
   if (error || !rows || rows.length === 0) {
@@ -119,6 +121,8 @@ const fetchFriends = async () => {
     .in('id', friendIds);
 
   setFriends(profileData || []);
+
+
 };
 
 // Search Directory with Debugging
@@ -432,8 +436,6 @@ if (!user || !user.id) {
   setSearchResults([]);
 };
 
-    // const targetChatId = activeChat?.id || activeChat?.friend_id || activeChat?.user_id;
-
   return (
     
     <div className="min-h-screen flex flex-col bg-zinc-950 text-zinc-100">
@@ -447,7 +449,9 @@ if (!user || !user.id) {
             <span className="text-sm bg-zinc-800 p-2 rounded-full border ">
               {user?.username || user?.email}
             </span>
-             <div onClick={handleLogout} className="text-xs p-2 text-red-400 hover:underline"><LogIn color="#808080" strokeWidth={2.75} alt='Log Out' /> </div>
+             <div onClick={() => {
+            setShowLogoutConfirm(true)
+          }} className="text-xs p-2 text-red-400 hover:underline"><LogIn color="#808080" strokeWidth={2.75} alt='Log Out' />  </div>
           </div>
         ) : (
           
@@ -456,11 +460,10 @@ if (!user || !user.id) {
              setIsLogIn(true);
               setIsOpen(true);
             }}
-            className="text-white p-3 rounded-lg font-bold cursor-pointer font-medium "
+            className="text-white p-3 rounded-lg font-bold cursor-pointer btn-login.active:hover btn-login.active font-medium "
           >
 <UserKey color="#808080" strokeWidth={2.75} alt="Sign In" /> 
           </div>
-         
         )}
       </header>
 
@@ -521,6 +524,7 @@ if (!user || !user.id) {
               </div>
             ))}
           </div>
+         
         </aside>
 
         {/* Chat Area */}
@@ -671,7 +675,7 @@ if (!user || !user.id) {
               )}
 
               {/* Message Input Controls */}
-              <div className="  sticky bottom-0 bg-zinc-950  flex items-center gap-3 w-full backdrop-blur-md ">
+              <div className="  sticky bottom-0 bg-zinc-950 p-1 flex items-center gap-4 w-full backdrop-blur-md ">
                 <div
                   onClick={() => setShowStickers(!showStickers)}
                   className={`h-11 w-11 flex items-center justify-center  rounded-full  text-base transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-0 cursor-pointer${showStickers ? ' text-blue-400 ' : ' text-zinc-400  hover:text-zinc-200'}`}
@@ -701,7 +705,7 @@ if (!user || !user.id) {
                   onClick={() =>
                     typedMessage.trim() && handleSendMessage(typedMessage, '', false)
                   }
-                  className="bg-brown-400 hover:bg-blue-700 border p-3 rounded-full text-sm font-bold "
+                  className="bg-brown-400  border-none p-3 rounded-full cursor-pointer text-sm font-bold "
                 >
                  <Send color="#ffffff" strokeWidth={0.75} />
                 </div>
@@ -715,6 +719,36 @@ if (!user || !user.id) {
         </main>
       </div>
 
+      {/* Logout Confirmation Modal */}
+          {showLogoutConfirm && (
+            <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+              <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-2xl shadow-2xl  mx-4 text-center">
+                <h3 className="text-lg font-bold text-white mb-2">Log Out?</h3>
+                <p className="text-sm text-zinc-400 mb-6">
+                  Are you sure you want to log out of your account?
+                </p>
+                
+                <div className="flex gap-3 justify-end">
+                  <div
+                    onClick={() => setShowLogoutConfirm(false)}
+                    className="flex-1 px-4 py-2 text-sm font-medium text-zinc-500 bg-zinc-800 border-none hover:bg-zinc-700 rounded-xl transition cursor-pointer"
+                  >
+                    Cancel
+                  </div>
+                  <div
+                    onClick={() => {
+                      setShowLogoutConfirm(false);
+                      handleLogout();
+                    }}
+                    className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-500 rounded-xl transition cursor-pointer"
+                  >
+                    Log Out
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
       {/* Login Modal */}
       {isOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
@@ -727,6 +761,7 @@ if (!user || !user.id) {
           />
         </div>
       )}
+      
     </div>
   );
 }

@@ -9,10 +9,13 @@ import { Eye, EyeOff } from 'lucide-react'
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
 
   // Check for: 1 uppercase, 1 lowercase, 1 digit, 1 special character, min 6 characters
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\-#])[A-Za-z\d@$!%*?&_\-#]{6,}$/;
 const usernameRegex = /^[a-zA-Z0-9]{3,10}$/; 
+const isPasswordValid = passwordRegex.test(password || '');
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -93,6 +96,8 @@ const usernameRegex = /^[a-zA-Z0-9]{3,10}$/;
     setIsLoading(false);
   }
   };
+// Validates email/username presence and minimum password length
+const isFormValid = (email?.trim().length > 0 || username?.trim().length > 0) && isPasswordValid  ;
 
   return (
     <div className="w-380px p-8 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl transform-gpu shrink-0">
@@ -171,20 +176,25 @@ const usernameRegex = /^[a-zA-Z0-9]{3,10}$/;
         <Eye size={18} />
       )}
     </div>
-
-           <p className="text-xxs text-zinc-400 px-3">
+     <p className="text-xxs text-zinc-400 px-3">
       Must contain 1 uppercase, 1 lowercase, 1 number & 1 special character (@$!%*?&_-#)
     </p> 
        
       </div>
 
 
-        <button type="submit" disabled={ isLoading} className="bg-gray-500 font-medium p-3 border  cursor-pointer  rounded-full text-black">
+        <button type="submit" disabled={ !isFormValid} onClick={handleSubmit}
+         className={`bg-gray-500 font-medium p-3 border  cursor-pointer  rounded-full text-black${
+    isFormValid
+      ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_20px_rgba(37,99,235,0.6)] cursor-pointer scale-[1.01]'
+      : 'bg-zinc-800 text-zinc-500 border border-zinc-700/50 cursor-not-allowed opacity-50'
+  }`}>
           {isLogIn ? 'Log In' : 'Register'}
         </button>
+      
 
         <p
-          className="text-xs text-gray-400 text-center cursor-pointer hover:underline"
+          className="text-xs text-gray-400 text-center cursor-pointer hover:underline "
           onClick={() => {
             setIsLogIn(!isLogIn);
             setError('');
@@ -193,6 +203,8 @@ const usernameRegex = /^[a-zA-Z0-9]{3,10}$/;
           {isLogIn ? "Don't have an account? Sign Up" : 'Already have an account? Login'}
         </p>
       </form>
+
+       
     </div>
   );
 }
