@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabaseClient';
 import Login from './Login';
-import { LogIn, LogOut, Send, Paperclip, UserPlus , SmilePlus , Upload ,Trash2 , Smile} from 'lucide-react';
+import { LogIn, LogOut, Send, Paperclip, UserPlus , SmilePlus , Upload ,Trash2 , Smile , X , Check } from 'lucide-react';
 import { UserKey } from 'lucide-react';
 import { Dot } from 'lucide-react';
 
@@ -36,9 +36,17 @@ export default function Welcome({
   const typingTimeoutRef = useRef(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const targetChatId = activeChat?.id || activeChat?.friend_id || activeChat?.user_id;
- 
+  const [isToggle, setIsToggle] = useState(false);
+  const [pendingRequests, setPendingRequests] = useState([]);
 
-            const formatExactLastSeen = (timestamp) => {
+  const closePending = () => {
+  setIsToggle(false);
+};
+ const togglePending = () => {
+  setIsToggle((prev) => !prev);
+};
+
+  const formatExactLastSeen = (timestamp) => {
           if (!timestamp) return 'Offline';
 
           const date = new Date(timestamp);
@@ -93,11 +101,9 @@ useEffect(() => {
     setSearchQuery(e.target.value);
   }
 
- 
 const fetchFriends = async () => {
   if (!user) return;
 
-  // Fetch rows where you are either user_id OR friend_id
   const { data: rows, error } = await supabase
     .from('friends')
     .select('user_id, friend_id')
@@ -106,24 +112,55 @@ const fetchFriends = async () => {
 
   if (error || !rows || rows.length === 0) {
     setFriends([]);
-    return;
+    // REMOVED 'return;' here so it continues to fetch pending requests!
+  } else {
+    // Extract all related IDs that are NOT the current user
+    const friendIds = rows.map((r) =>
+      r.user_id === user.id ? r.friend_id : r.user_id
+    );
+
+    // Get matching user profiles
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('*')
+      .in('id', friendIds);
+
+    setFriends(profileData || []);
   }
 
-  // Extract all related IDs that are NOT the current user
-  const friendIds = rows.map((r) =>
-    r.user_id === user.id ? r.friend_id : r.user_id
-  );
+  const { data: pendingRows, error: pendingError } = await supabase
+    .from('friends')
+    .select('id, user_id')
+    .eq('friend_id', user.id)
+    .eq('status', 'pending');
 
-  // Get matching user profiles
-  const { data: profileData } = await supabase
-    .from('profiles')
-    .select('*')
-    .in('id', friendIds);
+  if (pendingError || !pendingRows || pendingRows.length === 0) {
+    setPendingRequests([]);
+  } else {
+    // Extract sender IDs
+    const senderIds = pendingRows.map((r) => r.user_id);
 
-  setFriends(profileData || []);
+    // Get sender profiles
+    const { data: senderProfiles } = await supabase
+      .from('profiles')
+      .select('*')
+      .in('id', senderIds);
 
+    // Format data to match the UI map function
+    const formattedRequests = pendingRows.map((req) => ({
+      id: req.id,
+      profiles: senderProfiles?.find((p) => p.id === req.user_id),
+    }));
 
+    setPendingRequests(formattedRequests);
+  }
 };
+
+useEffect(() => {
+  if (user?.id) {
+    fetchFriends();
+  }
+}, [user?.id]);
 
 // Search Directory with Debugging
 useEffect(() => {
@@ -407,8 +444,14 @@ if (!user || !user.id) {
 }
   // 2. Insert connection into Supabase
   const { error } = await supabase.from('friends').insert([
-    { user_id: user.id, friend_id: targetId }
+    { user_id: user.id, friend_id: targetId, status: 'pending' }
   ]);
+  if (!error) {
+    console.log("Friend request sent!");
+    fetchFriends(); // Refresh the lists
+  } else {
+    console.error("Error sending request:", error.message);
+  }
 
   if (error) {
     // If it's a duplicate constraint, ignore the error and select the chat anyway
@@ -434,6 +477,34 @@ if (!user || !user.id) {
 
   setSearchQuery('');
   setSearchResults([]);
+};
+
+// Accept Request: Updates status to 'accepted' and refreshes lists
+const handleAcceptRequest = async (requestId) => {
+  const { error } = await supabase
+    .from('friends')
+    .update({ status: 'accepted' })
+    .eq('id', requestId);
+
+  if (!error) {
+    fetchFriends(); 
+  } else {
+    console.error('Error accepting request:', error.message);
+  }
+};
+
+// Decline Request: Deletes the pending request from the database
+const handleDeclineRequest = async (requestId) => {
+  const { error } = await supabase
+    .from('friends')
+    .delete()
+    .eq('id', requestId);
+
+  if (!error) {
+    fetchFriends();
+  } else {
+    console.error('Error declining request:', error.message);
+  }
 };
 
   return (
@@ -524,8 +595,57 @@ if (!user || !user.id) {
               </div>
             ))}
           </div>
-         
-        </aside>
+
+
+         <div className="mb-4 p-1 text-black">
+  {/* The Toggle Button (Make sure you didn't delete this!) */}
+  <button
+    type="button"
+    onClick={togglePending}
+    className="w-full flex items-center justify-between p-3 bg-brown-450 border text-black font-semibold rounded-lg  cursor-pointer"
+  >
+    <span> <b> Pending Requests</b></span>
+    <span className="text-xs">{isToggle ? '▲ Close' : '▼ Open'}</span>
+  </button>
+{isToggle && (
+  <div className="p-3 border-none  rounded-lg text-white">
+    
+    {/* Loop through incoming requests */}
+    {pendingRequests.length === 0 ? (
+      <div className="text-xs text-zinc-400 text-center py-2 mb-2">
+        No pending requests
+      </div>
+    ) : (
+      pendingRequests.map((req) => (
+        <div key={req.id} className="flex justify-between items-center  p-2  rounded-lg border">
+          {/* Username on the Left */}
+          <span className="text-xs text-zinc-200 font-medium truncate max-w-[120px]">
+          <b><i> {req.profiles?.username || 'Unknown User'}</i></b>  
+          </span>
+          
+          {/* Action Buttons on the Right */}
+          <div className="flex ">
+            <span
+              onClick={() => handleAcceptRequest(req.id)}
+              className="text-xs text-rose p-1 rounded cursor-pointer "
+            >
+            <b><Check /></b> 
+            </span>
+            <span
+              onClick={() => handleDeclineRequest(req.id)}
+              className="text-xs  text-emerald p-1 rounded cursor-pointer "
+            >
+              <X />
+            </span>
+          </div>
+        </div>
+      ))
+    )}
+  </div>
+)}
+</div>
+ </aside>
+
 
         {/* Chat Area */}
         <main className="flex-1 mr-2 flex flex-col bg-zinc-950 h-screen pt-16 ml-80">
