@@ -182,7 +182,6 @@ const isFormValid = (email?.trim().length > 0 || username?.trim().length > 0) &&
        
       </div>
 
-
         <button type="submit" disabled={ !isFormValid} onClick={handleSubmit}
          className={`bg-gray-500 font-medium p-3 border  cursor-pointer  rounded-full text-black${
     isFormValid
