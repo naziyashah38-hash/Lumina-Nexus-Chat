@@ -100,21 +100,21 @@ const isPasswordValid = passwordRegex.test(password || '');
 const isFormValid = (email?.trim().length > 0 || username?.trim().length > 0) && isPasswordValid  ;
 
   return (
-    <div className="w-380px p-8 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl transform-gpu shrink-0">
+    <div className="w-380px p-8 bg-frnd border border-zinc-800 rounded-2xl shadow-2xl transform-gpu shrink-0">
 
       <div
           onClick={closeForm}
           type="button"
-          className=" mr-1 mb-3 p-1 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-full absolute cursor-pointer transition duration-200 ease-in-out"
+          className=" mr- mb-3 p-1 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-full absolute cursor-pointer transition duration-200 ease-in-out"
           aria-label="Close modal"
         >
-           <span className=" h-5 font-bold">
+           <span className=" h-5 mt-2 text-white font-bold">
             ✕
             </span> 
         </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <h2 className="text-2xl font-bold text-white text-center">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <h2 className="mt-1 font-bold text-white text-center">
           {isLogIn ? 'Welcome Back' : 'Create Account'}
         </h2>
 
@@ -128,7 +128,7 @@ const isFormValid = (email?.trim().length > 0 || username?.trim().length > 0) &&
           type="email"
           placeholder="Email Address"
           required
-          className="p-3 rounded-1xl bg-zinc-800 border border-zinc-700 text-white focus:outline-none"
+          className="p-2 rounded-2xl bg-zinc-800 border text-xs border-zinc-700 text-white focus:outline-none"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
@@ -140,7 +140,7 @@ const isFormValid = (email?.trim().length > 0 || username?.trim().length > 0) &&
             type="text"
             placeholder="Username"
             required 
-            className="p-3 rounded-1xl bg-white border border-zinc-700 text-black focus:outline-none"
+            className="p-2 rounded-2xl text-xs bg-zinc-800 border border-zinc-700 text-white focus:outline-none"
             value={username}
             onChange={(e) => {
               const noSpaces = e.target.value.replace(/\s+/g, '');
@@ -160,7 +160,7 @@ const isFormValid = (email?.trim().length > 0 || username?.trim().length > 0) &&
           type={showPassword ? "text" : "password"}
           placeholder="Password"
           required
-          className="p-3 rounded-1xl bg-white border border-zinc-700 text-black focus:outline-none"
+          className="p-2 rounded-2xl text-xs bg-zinc-800 border border-zinc-700 text-white focus:outline-none"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
            />
@@ -168,10 +168,10 @@ const isFormValid = (email?.trim().length > 0 || username?.trim().length > 0) &&
             <div
       type="button" // CRITICAL: Must be type="button" so it doesn't trigger form submit
       onClick={() => setShowPassword(!showPassword)}
-      className=" absolute right-3 p-3 border-none text hover:text-h cursor-pointer transition-colors "
+      className=" absolute right-3 p-2 border-none  hover:text-h cursor-pointer transition-colors "
     >
       {showPassword ? (
-        <EyeOff size={18} />
+        <EyeOff size={18} color='#93C5FD' />
       ) : (
         <Eye size={18} />
       )}
@@ -183,10 +183,10 @@ const isFormValid = (email?.trim().length > 0 || username?.trim().length > 0) &&
       </div>
 
         <button type="submit" disabled={ !isFormValid} onClick={handleSubmit}
-         className={`bg-gray-500 font-medium p-3 border  cursor-pointer  rounded-full text-black${
+         className={`bg-blue-600 text-m p-2 cursor-pointer  rounded-4xl text-black${
     isFormValid
-      ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_20px_rgba(37,99,235,0.6)] cursor-pointer scale-[1.01]'
-      : 'bg-zinc-800 text-zinc-500 border border-zinc-700/50 cursor-not-allowed opacity-50'
+      ? 'bg-white-600 hover:bg-white-500 text-white shadow-[0_0_20px_rgba(147,197,253,0.6)] cursor-pointer scale-[1.01]'
+      : 'bg-zinc-800 text-black  border border-zinc-700/50 cursor-not-allowed opacity-50'
   }`}>
           {isLogIn ? 'Log In' : 'Register'}
         </button>

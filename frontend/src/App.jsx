@@ -10,7 +10,7 @@ export default function App() {
   const [isOpen, setIsOpen] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [user, setUser] = useState(null)
-  const [isLoading, setIsLoading] = useState(false);
+  const [isFading, setIsFading] = useState(false);
  
   useEffect(() => {
     document.title = "Lumina Nexus";
@@ -18,8 +18,12 @@ export default function App() {
 
   useEffect(() => {
     const loaderTimer = setTimeout(() => {
-      setLoading(false)
-    }, 4500) 
+      setIsFading(true);
+
+     setTimeout(() => {
+        setLoading(false);
+      }, 800);
+    }, 3500);
 
     return () => clearTimeout(loaderTimer)
   }, [])
@@ -80,16 +84,17 @@ export default function App() {
     setIsLoggedIn(false)
     setIsOpen(true)
   }
-
- 
   if (loading) {
-    return <Loader />
+    return <Loader isFading={isFading} />
   }
-
-  // MAIN APPLICATION SCREEN
   return (
     <div className='w-full h-screen bg-[#0a090b] text-white relative overflow-hidden'>
-      {/* 1. Main Welcome/Chat Interface */}
+
+      <div
+        className={`w-full h-full transition-opacity duration-700 ease-in-out ${
+          isFading ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
       <Welcome
         isLogIn={isLogIn}
         setIsLogIn={setIsLogIn}
@@ -102,6 +107,8 @@ export default function App() {
         handleLogout={handleLogout}
         onSearchInteraction={handleSearchInteraction}
       />
+      </div>
+        
 
       {/* 2. Login Popup (Shown when user is not logged in) */}
       {!isLoggedIn && isOpen && (
@@ -115,6 +122,7 @@ export default function App() {
           />
         </div>
       )}
+      
     </div>
   )
 }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabaseClient';
 import Login from './Login';
-import { LogIn, LogOut, Send, Paperclip, UserPlus , SmilePlus , Upload ,Trash2 , Smile , X , Check } from 'lucide-react';
+import { LogIn, LogOut, Send,  UserPlus , SmilePlus , Upload ,Trash2 , Smile , X , Check } from 'lucide-react';
 import { UserKey } from 'lucide-react';
 import { Dot } from 'lucide-react';
 
@@ -509,20 +509,20 @@ const handleDeclineRequest = async (requestId) => {
 
   return (
     
-    <div className="min-h-screen flex flex-col bg-zinc-950 text-zinc-100">
+    <div className="min-h-screen flex flex-col text-zinc-100">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 h-16 w-full px-6 border-b border-zinc-800 flex justify-between items-center bg-zinc-950">
-        <h1 className=" cormorant-garamond-uniquifier font-bold text-brown-400 ml-1 tracking-wider ">LUMINA NEXUS </h1>
-         <p className=" text-bold ">Lumina said  'HI' 😉</p>
+      <header className="fixed top-0 left-0 right-0 z-50 h-16 w-full p-8  border-b border-zinc-800 flex justify-between items-center bg-zinc-950">
+        <h1 className=" cormorant-garamond-uniquifier font-bold text-brown-400 ml-1 text-2xl tracking-wider ">LUMINA NEXUS </h1>
+         {/* <p className=" text-bold ">Lumina said  'HI' 😉</p> */}
         {isLoggedIn ? (
-          <div className="flex items-center gap-2"> 
-          <Dot size={36} strokeWidth={3} />
-            <span className="text-sm bg-zinc-800 p-2 rounded-full border ">
+          <div className="flex items-center "> 
+          <Dot size={36} color='#D4D7DB' strokeWidth={3} />
+            <span className="text-sm bg-zinc-800 p-2 rounded-full  ">
               {user?.username || user?.email}
             </span>
              <div onClick={() => {
             setShowLogoutConfirm(true)
-          }} className="text-xs p-2 text-red-400 hover:underline"><LogIn color="#808080" strokeWidth={2.75} alt='Log Out' />  </div>
+          }} className="text-xs p-2  hover:underline"><LogIn color="#D4D7DB" strokeWidth={2.75} alt='Log Out' />  </div>
           </div>
         ) : (
           
@@ -531,9 +531,9 @@ const handleDeclineRequest = async (requestId) => {
              setIsLogIn(true);
               setIsOpen(true);
             }}
-            className="text-white p-3 rounded-lg font-bold cursor-pointer btn-login.active:hover btn-login.active font-medium "
+            className="text-white p-3 rounded-lg bold cursor-pointer btn-login.active:hover btn-login.active font-medium "
           >
-<UserKey color="#808080" strokeWidth={2.75} alt="Sign In" /> 
+           <UserKey color="#808080" strokeWidth={2.75} alt="Sign In" /> 
           </div>
         )}
       </header>
@@ -541,11 +541,11 @@ const handleDeclineRequest = async (requestId) => {
       {/* Main Container */}
       <div className="flex w-full mt-16  ">
         {/* Sidebar */}
-        <aside className="fixed top-16 left-0 w-80 h-calc border-r border-zinc-800 p-3 flex flex-col gap-4 bg-zinc-900/50 shrink-0 z-40 overflow-hidden">
+        <aside className="fixed top-14  left-0 w-92 h-calc mt-2 border-r scrollbar-none overflow-auto  border-zinc-800 p-3 flex flex-col gap-4 bg-sidebar shrink-0 z-40 ">
           <input
             type="text"
-            placeholder="Find someone to spill the tea with...☕"
-         className="bg-zinc-900 border border-zinc-800 p-3 rounded-xl text-sm focus:outline-none focus:border-blue-500 text-white shrink-0 " 
+            placeholder=" Find someone to spill the tea with...☕"
+         className="bg-zinc-900 border border-zinc-800 p-3 rounded-xl  text-sm focus:outline-none text-mauve-950 shrink-0 " 
             value={searchQuery}
             onFocus={() => {
           if (!isLoggedIn && onSearchInteraction) {
@@ -557,14 +557,14 @@ const handleDeclineRequest = async (requestId) => {
 
           {/* Search Results */}
           {searchResults.length > 0 && (
-            <div className="flex  flex-col gap-2 shrink-0">
-              <p className="text-xs  text-zinc-500 p-2 rounded-full tracking-wider">This is the person who are you searching for🤔?</p>
+            <div className="flex  flex-col gap-3  shrink-0">
+              <p className="text-xs  text-zinc-500 p-2 rounded-full  tracking-wider">This is the person who are you searching for🤔?</p>
               {searchResults.map((u) => (
                 <div
                   key={u.id}
-                  className="flex items-center justify-between p-3 bg-zinc-800/80 rounded-lg"
+                  className="flex items-center justify-between p-3 hover:bg-gray-600 rounded-lg"
                 >
-                  <span className="text-sm  ">
+                  <span className="text-sm text-brown-400 ">
                     {u.username}
                   </span>
                   <div
@@ -579,91 +579,91 @@ const handleDeclineRequest = async (requestId) => {
           )}
 
           {/* Friends List */}
-          <div className="flex-1 overflow-y-auto flex flex-col gap-2">
+          <div className="flex-1 overflow-y-auto flex  flex-col gap-1">
             <p className="text-xs font-bold text-zinc-500 px-1 uppercase tracking-wider mb-2">Who are we texting today ?👀</p>
             {friends.map((f) => (
               <div
                 key={f.id}
                 onClick={() => setActiveChat(f)}
-                className={`p-3 rounded-xl cursor-pointer transition ${
+                className={`p-3 rounded-xl cursor-pointer bg-frnd  transition ${
                   activeChat?.id === f.id
-                    ? 'bg-blue-600/20 border border-blue-500'
-                    : 'bg-zinc-800/40 hover:bg-zinc-800'
+                    ? 'bg-blue-600 '
+                    : ' hover:bg-teal-900'
                 }`}
               >
-                <p className="font-medium text-sm">{f.username}</p>
+                <p className="font-medium  text-sm">{f.username}</p>
               </div>
             ))}
           </div>
 
 
-         <div className="mb-4 p-1 text-black">
-  {/* The Toggle Button (Make sure you didn't delete this!) */}
-  <button
-    type="button"
-    onClick={togglePending}
-    className="w-full flex items-center justify-between p-3 bg-brown-450 border text-black font-semibold rounded-lg  cursor-pointer"
-  >
-    <span> <b> Pending Requests</b></span>
-    <span className="text-xs">{isToggle ? '▲ Close' : '▼ Open'}</span>
-  </button>
-{isToggle && (
-  <div className="p-3 border-none  rounded-lg text-white">
-    
-    {/* Loop through incoming requests */}
-    {pendingRequests.length === 0 ? (
-      <div className="text-xs text-zinc-400 text-center py-2 mb-2">
-        No pending requests
-      </div>
-    ) : (
-      pendingRequests.map((req) => (
-        <div key={req.id} className="flex justify-between items-center  p-2  rounded-lg border">
-          {/* Username on the Left */}
-          <span className="text-xs text-zinc-200 font-medium truncate max-w-[120px]">
-          <b><i> {req.profiles?.username || 'Unknown User'}</i></b>  
-          </span>
-          
-          {/* Action Buttons on the Right */}
-          <div className="flex ">
-            <span
-              onClick={() => handleAcceptRequest(req.id)}
-              className="text-xs text-rose p-1 rounded cursor-pointer "
-            >
-            <b><Check /></b> 
-            </span>
-            <span
-              onClick={() => handleDeclineRequest(req.id)}
-              className="text-xs  text-emerald p-1 rounded cursor-pointer "
-            >
-              <X />
-            </span>
-          </div>
-        </div>
-      ))
-    )}
-  </div>
-)}
-</div>
- </aside>
+         <div className="mb-4  fixed bottom-0 text-black">
+                    {/* The Toggle Button (Make sure you didn't delete this!) */}
+                    <button
+                      type="button"
+                      onClick={togglePending}
+                      className="w-85 flex items-center justify-between p-3 bg-zinc-500 border gap-19 text-[#192841] font-semibold rounded-lg  cursor-pointer"
+                    >
+                      <span> <b> Pending Requests</b></span>
+                      <span className="text-xs">{isToggle ? '▲ Close' : '▼ Open'}</span>
+                    </button>
+                  {isToggle && (
+                    <div className="p-3 border-none  rounded-lg text-white">
+                      
+                      {/* Loop through incoming requests */}
+                      {pendingRequests.length === 0 ? (
+                        <div className="text-xs text-zinc-400 text-center py-2 mb-2">
+                          No pending requests
+                        </div>
+                      ) : (
+                        pendingRequests.map((req) => (
+                          <div key={req.id} className="flex justify-between items-center  p-2  rounded-lg border">
+                            {/* Username on the Left */}
+                            <span className="text-xs text-zinc-200 font-medium truncate  max-w-120px">
+                            <b><i> {req.profiles?.username || 'Unknown User'}</i></b>  
+                            </span>
+                            
+                            {/* Action Buttons on the Right */}
+                            <div className="flex gap-2">
+                              <span
+                                onClick={() => handleAcceptRequest(req.id)}
+                                className="text-xs text-rose p-1 rounded cursor-pointer "
+                              >
+                              <b><Check /></b> 
+                              </span>
+                              <span
+                                onClick={() => handleDeclineRequest(req.id)}
+                                className="text-xs  text-emerald p-1 rounded cursor-pointer "
+                              >
+                                <X />
+                              </span>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                  </div>
+           </aside>
 
 
         {/* Chat Area */}
-        <main className="flex-1 mr-2 flex flex-col bg-zinc-950 h-screen pt-16 ml-80">
+        <main className="flex-1 mr-2 mb-2 h-screen bg-zinc-950 scrollbar-none overflow-auto  ">
          {activeChat ? (
             <> 
               {/* Chat Header */}
-              <div className="p-4 fixed text-brown-400 border-b border-zinc-800 mt-0 w-full font-bold bg-zinc-950 ">
+              <div className="p-3 fixed text-brown-400 border-b border-zinc-800  w-full ml-  font-bold bg-zinc-950 ">
                 {activeChat.username|| activeChat?.name}
              
-               <span className="text-xs ml-1 font-normal">
+               <span className="text-xs ml-1 font-normal ">
                         {isFriendTyping ? (
                           <span className="typing font-medium animate-pulse">typing...</span>
                         ) : onlineUsers[targetChatId]?.length > 0 ? (
-                          <span className="text-green-400  items-center gap-1">
+                          <span className="text-green-200  items-center gap-1">
                             <span className="text-[10px]">●</span> Online
                           </span>
                         ) : activeChat?.last_seen ? (
-                          <span className="text-zinc-500" >
+                          <span className="text-zinc-300" >
                             Last seen : {formatExactLastSeen(activeChat.last_seen || activeChat.Last_seen)}
                           </span>
                         ) : (
@@ -672,7 +672,7 @@ const handleDeclineRequest = async (requestId) => {
                       </span> </div>
 
               {/* Messages Area */}
-              <div className="flex-1  p-4 space-y-3 overflow-y-auto mt-4 custom-scrollbar flex flex-col">
+              <div  className=" p-2 space-y-3 mt-25.5 gap-2 mb-12 ">
                 {messages.filter(Boolean).map((msg, idx) => {
                   const isMe = msg.sender === user?.id;
 
@@ -686,39 +686,38 @@ const handleDeclineRequest = async (requestId) => {
                     
                     <div
                       key={msg.id || idx}
-                      className={`flex flex-col w-full rounded-full  ${isMe ? 'items-end' : 'items-start'}`}
+                      className={`flex flex-col w-full rounded-full   ${isMe ? 'items-end' : 'items-start'}`}
                     > 
-
                     <span
               className={`text-xxs   mt-1  py-1 ${
-                isMe ? 'text-blue-200' : 'text-zinc-400'
+                isMe ? 'text-blue-200' : 'text-zinc'
               }`}
             >
               {formatTime(msg.created_at)}
             </span>
 
                   <div classname= "relative inline-block">
-                    {/* Reaction Picker Button */}
+                   
                         {!isMe && (
                           <div
                             onClick={() =>
                               setActiveEmojiMenu(activeEmojiMenu === msg.id ? null : msg.id)
                             }
-                            className="opacity-0 group-hover:opacity-100 transition cursor-pointer hover:text-white"
+                            className=" group-hover:opacity-100 transition cursor-pointer  hover:text-white"
                           >
-                            <Smile size={16} />
+                            <Smile size={16} color='#ffffff' /> 
                           </div>
                         )}
                         
                         {activeEmojiMenu === msg.id && 
-                        <div className="  bg-brown-750 rounded-xl p-1 cursor-pointer flex gap-3  ">
+                        <div className="  bg-gray-200 rounded-xl p-1 cursor-pointer  flex gap-3  ">
                         {['❤️', '😂', '🔥', '👍', '😮'].map((emoji) => (
                               <div
                                 key={emoji}
                                 onClick={() => handleToggleReaction(msg.id, emoji)}
-                                className="cursor-pointer text-base"
+                                className="cursor-pointer hover:scale-129 text-base"
                               >
-                                {emoji}
+                                {emoji} 
                               </div>
                         ))}
             </div> 
@@ -729,8 +728,8 @@ const handleDeclineRequest = async (requestId) => {
                             msg.file_url || msg.is_sticker
                               ? 'bg-transparent p-0'
                               : isMe
-                              ? 'bg-brown-400 text-white px-4 py-2 rounded-br-none rounded-2xl'
-                              : 'bg-zinc-800 text-zinc-100 px-4 py-2 rounded-bl-none rounded-2xl'
+                              ? 'bg-zinc-800 text-white px-4 py-2 rounded-br-none rounded-2xl'
+                              : 'bg-zinc-8 text-zinc-100 px-4 py-2 rounded-bl-none rounded-2xl'
                           }`} >
                              {msg.file_url ? (
                           <img
@@ -741,7 +740,7 @@ const handleDeclineRequest = async (requestId) => {
                         ) : msg.is_sticker ? (
                           <span className="text-5xl select-none leading-none drop-shadow-md">{msg.text}</span>
                         ) : (
-                          <p className="whitespace-pre-wrap break-words">{msg.text}</p>
+                          <p className="whitespace-pre-wrap wrap-break-words">{msg.text}</p>
                         )}
                       </div> 
                       {/* Delete */}
@@ -749,9 +748,9 @@ const handleDeclineRequest = async (requestId) => {
                               <div
                                 onClick={() => handleDeleteMessage(msg.id)}
                                 title="Delete message"
-                                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 cursor-pointer text-zinc-400 hover:text-red-400 rounded shrink-0"
-                              >
-                                <Trash2 size={15} />
+                                className=" group-hover:opacity-100 text-amber-50 transition-opacity p-1 cursor-pointer  rounded shrink-0"
+                              > 
+                                <Trash2 size={15} /> 
                               </div>
                             )}
 
@@ -763,55 +762,52 @@ const handleDeclineRequest = async (requestId) => {
                               key={emoji}
                               className="bg-zinc-800 border border-zinc-700 rounded-full text-xs px-2 py-0.5 flex items-center gap-1"
                             >
-                              <span>{emoji}</span>
+                              <span>{emoji} </span>
                               <span className="text-zinc-400 text-[10px]">{count}</span>
                             </span>
                           ))}
                         </div>
                       )}
                     </div>
-                    
-
                   );
                 })}
                 <div ref={messagesEndRef} />
               </div>
 
               
-
+         <div className=" fixed bottom-0 p-2 bg-zinc-950  scrollbar-none  flex items-center gap-1 ">
+          <div className="relative flex-none">
               {/* Sticker Drawer */}
               {showStickers && (
-                <div className="p-2  bg-none border  flex gap-3">
+                <div className="p-2 absolute  bottom-0 left-0 z-30 mb-13 rounded-full bg-white border flex gap-3">
                   {SYSTEM_STICKERS.map((sticker, idx) => (
                     <div
                       key={idx}
                       onClick={() => handleSendMessage(sticker, '', true)}
-                      className=" text-2xl hover:scale-125 bg-none  cursor-pointer select-none"
+                      className=" text-2xl hover:scale-129 bg-white cursor-pointer  rounded-full select-none"
                     >
                       {sticker}
                     </div>
                   ))}
                 </div>
               )}
-
-              {/* Message Input Controls */}
-              <div className="  sticky bottom-0 bg-zinc-950 p-1 flex items-center gap-4 w-full backdrop-blur-md ">
-                <div
+                <div 
                   onClick={() => setShowStickers(!showStickers)}
-                  className={`h-11 w-11 flex items-center justify-center  rounded-full  text-base transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-0 cursor-pointer${showStickers ? ' text-blue-400 ' : ' text-zinc-400  hover:text-zinc-200'}`}
+                  className={`h-11 w-11 flex items-center justify-center   rounded-full  hover:bg-blue-950  transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-0 cursor-pointer${showStickers ? ' text-blue-600 ' : ' text-zinc-400  hover:text-zinc-800'}`}
                 >
-                 <SmilePlus color="#808080" strokeWidth={0.75} />
+                 <SmilePlus color="#ffffff" strokeWidth={0.75}  />
                 </div>
+               </div>
 
-                <label className="h-11 w-11 flex items-center justify-center  hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 rounded-xl cursor-pointer transition-all duration-200 hover:scale-105 active:scale-95">
-                 <Upload color="#808080" strokeWidth={0.75} />
+                <label className="h-11 w-11 flex items-center justify-center  hover:bg-blue-950 text-zinc-400 hover:text-zinc-200 rounded-xl cursor-pointer transition-all duration-200 hover:scale-105 active:scale-95">
+                 <Upload color="#ffffff" strokeWidth={0.75} />
                   <input type="file" accept='image/*' onChange={handleFileUpload} className="hidden" />
                 </label>
 
                 <input
                   type="text"
                   placeholder={`Message ... ${activeChat.username|| activeChat?.name}`}
-                  className="flex-1 bg-zinc-800 border border-zinc-700 rounded-full p-4 font-white font-bold text-sm focus:outline-none"
+                  className="flex-1  bg-zinc-800 border border-zinc-700 rounded-full p-4 font-white w font-bold text-sm "
                   value={typedMessage}
                   onChange={handleTypedMessageChange}
                   onKeyDown={(e) =>{
@@ -825,14 +821,14 @@ const handleDeclineRequest = async (requestId) => {
                   onClick={() =>
                     typedMessage.trim() && handleSendMessage(typedMessage, '', false)
                   }
-                  className="bg-brown-400  border-none p-3 rounded-full cursor-pointer text-sm font-bold "
+                  className="bg-blue-950  border-none p-3 rounded-full cursor-pointer  "
                 >
-                 <Send color="#ffffff" strokeWidth={0.75} />
+               <b>  <Send color="#ffffff" strokeWidth={0.75} /> </b>
                 </div>
               </div>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-zinc-500">
+            <div className="flex-1 flex items-center justify-center text-white mt-50">
              Select or search a contact connection profile to discuss who are we spilling today?🎀
             </div>
           )}
@@ -842,16 +838,16 @@ const handleDeclineRequest = async (requestId) => {
       {/* Logout Confirmation Modal */}
           {showLogoutConfirm && (
             <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-              <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-2xl shadow-2xl  mx-4 text-center">
+              <div className="bg-zinc-8 border  p-8 rounded-2xl shadow-2xl  mx-4 text-center">
                 <h3 className="text-lg font-bold text-white mb-2">Log Out?</h3>
                 <p className="text-sm text-zinc-400 mb-6">
                   Are you sure you want to log out of your account?
                 </p>
                 
-                <div className="flex gap-3 justify-end">
+                <div className="flex gap-3 justify-end ">
                   <div
                     onClick={() => setShowLogoutConfirm(false)}
-                    className="flex-1 px-4 py-2 text-sm font-medium text-zinc-500 bg-zinc-800 border-none hover:bg-zinc-700 rounded-xl transition cursor-pointer"
+                    className="flex-1 px-4 py-2 text-sm font-medium text-zinc-400 bg-zinc-800 border-none hover:bg-amber-100 rounded-xl  cursor-pointer"
                   >
                     Cancel
                   </div>
@@ -860,7 +856,7 @@ const handleDeclineRequest = async (requestId) => {
                       setShowLogoutConfirm(false);
                       handleLogout();
                     }}
-                    className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-500 rounded-xl transition cursor-pointer"
+                    className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-white rounded-xl transition cursor-pointer"
                   >
                     Log Out
                   </div>
